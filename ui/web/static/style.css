@@ -1,0 +1,175 @@
+/* -------------------------
+   RESET BÁSICO
+------------------------- */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* -------------------------
+   GENERAL
+------------------------- */
+
+body {
+    background-color: #0f172a;
+    color: #e2e8f0;
+    font-family: Arial, sans-serif;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #38bdf8;
+    margin-bottom: 20px;
+}
+
+/* -------------------------
+   LAYOUT PRINCIPAL
+------------------------- */
+
+#top {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+/* -------------------------
+   PANEL BASE
+------------------------- */
+
+#player,
+#enemy,
+#log,
+#actions {
+    background: #1e293b;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+/* -------------------------
+   PLAYER / ENEMY
+------------------------- */
+
+#player,
+#enemy {
+    width: 300px;
+}
+
+#player {
+    border-left: 5px solid #22c55e;
+}
+
+#enemy {
+    border-left: 5px solid #ef4444;
+    transition: transform 0.2s;
+}
+
+/* -------------------------
+   LOG (CLAVE)
+------------------------- */
+
+#log {
+    width: 640px;
+    height: 220px; /* 🔥 altura fija */
+    margin-bottom: 15px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+#log h3 {
+    margin-bottom: 10px;
+}
+
+#log-text {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* cada línea del log */
+#log-text p {
+    margin: 4px 0;
+    font-size: 14px;
+}
+
+/* -------------------------
+   TIPOS DE LOG
+------------------------- */
+
+.log-damage {
+    color: #f87171;
+    font-weight: bold;
+}
+
+.log-crit {
+    color: #facc15;
+    font-weight: bold;
+    text-shadow: 0 0 6px orange;
+}
+
+.log-miss {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.log-dodge {
+    color: #38bdf8;
+    font-weight: bold;
+}
+
+.log-info {
+    color: #e2e8f0;
+}
+
+/* -------------------------
+   BOTONES
+------------------------- */
+
+#actions {
+    width: 640px;
+    text-align: center;
+}
+
+button {
+    background: #334155;
+    color: white;
+    border: none;
+    padding: 10px 12px;
+    margin: 5px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover {
+    background: #475569;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+/* -------------------------
+   ANIMACIÓN
+------------------------- */
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+}
+
+.shake {
+    animation: shake 0.3s;
+}

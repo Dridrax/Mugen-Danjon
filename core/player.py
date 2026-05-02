@@ -59,9 +59,11 @@ class Player:
     # -------------------------
 
     def recibir_dano(self, dano):
-        dano_final = max(0, dano - self.get_defensa())
-        self.hp -= dano_final
-        return dano_final
+        self.hp -= dano
+
+        if self.hp < 0:
+            self.hp = 0
+        return dano
 
     def curar(self, cantidad):
         self.hp = min(self.hp_max, self.hp + cantidad)

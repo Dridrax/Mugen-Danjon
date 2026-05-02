@@ -1,3 +1,5 @@
+#ui/input_handler
+
 from core.combat import ACCION_ATACAR, ACCION_ESQUIVAR, ACCION_SALIR
 
 

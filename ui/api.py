@@ -1,3 +1,5 @@
+#ui/api.py
+
 from flask import Flask, jsonify, request, render_template
 
 from core.player import Player
@@ -37,7 +39,11 @@ def start():
 
     return jsonify({
         "player": player.get_estado(),
-        "enemy": current_enemy.get_estado()
+        "enemy": current_enemy.get_estado(),
+        "log": [{
+            "type": "info",
+            "text": "¡Un enemigo aparece!"
+        }]
     })
 
 
@@ -94,7 +100,8 @@ def action():
                     "nombre": item.nombre,
                     "tipo": item.tipo
                 } for item in loot
-            ]
+            ],
+            "log": resultado.get("log", [])  # 🔥 IMPORTANTE
         })
 
     # -------------------------
@@ -103,7 +110,8 @@ def action():
     return jsonify({
         "end": False,
         "player": player.get_estado(),
-        "enemy": current_enemy.get_estado()
+        "enemy": current_enemy.get_estado(),
+        "log": resultado.get("log", [])
     })
 
 

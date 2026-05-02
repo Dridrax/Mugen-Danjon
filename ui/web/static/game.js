@@ -1,3 +1,5 @@
+//ui/web/static/game.js
+
 let combatActive = false;
 
 
@@ -9,8 +11,13 @@ function startGame() {
         .then(res => res.json())
         .then(data => {
             combatActive = true;
+
+            clearLog(); // 🔥 limpiar log anterior
             updateUI(data);
-            setLog("¡Un enemigo aparece!");
+
+            addLog(data.log || [
+                { type: "info", text: "¡Un enemigo aparece!" }
+            ]);
         });
 }
 
@@ -20,7 +27,7 @@ function startGame() {
 // -------------------------
 function sendAction(action) {
     if (!combatActive) {
-        setLog("No hay combate activo");
+        addLog([{ type: "info", text: "No hay combate activo" }]);
         return;
     }
 
@@ -34,29 +41,40 @@ function sendAction(action) {
     .then(res => res.json())
     .then(data => {
 
+        updateUI(data);
+
+        // 🔥 añadir log del backend
+        addLog(data.log || []);
+
+        // -------------------------
+        // ANIMACIÓN DE ATAQUE
+        // -------------------------
+        if (data.log) {
+            data.log.forEach(line => {
+                if (line.type === "damage" || line.type === "crit") {
+                    animateEnemy();
+                }
+            });
+        }
+
         // FIN DEL COMBATE
         if (data.end) {
             combatActive = false;
 
             if (data.victory) {
-                setLog("¡Has ganado!");
+                addLog([{ type: "info", text: "🏆 ¡Has ganado!" }]);
 
                 if (data.loot.length > 0) {
                     let lootText = data.loot.map(i => i.nombre).join(", ");
-                    setLog("Loot: " + lootText);
+                    addLog([{ type: "info", text: "Loot: " + lootText }]);
                 }
 
             } else {
-                setLog("Has perdido o escapado...");
+                addLog([{ type: "info", text: "Has perdido o escapado..." }]);
             }
 
-            updateUI(data);
             return;
         }
-
-        // COMBATE CONTINÚA
-        updateUI(data);
-        setLog("Acción realizada...");
     });
 }
 
@@ -94,8 +112,64 @@ function updateUI(data) {
 
 
 // -------------------------
-// LOG
+// LOG SISTEMA NUEVO
 // -------------------------
-function setLog(text) {
-    document.getElementById("log-text").innerText = text;
+
+function clearLog() {
+    document.getElementById("log-text").innerHTML = "";
+}
+
+function addLog(lines) {
+    const log = document.getElementById("log-text");
+
+    if (!Array.isArray(lines)) return;
+
+    lines.forEach(line => {
+        const p = document.createElement("p");
+
+        if (typeof line === "object") {
+            p.innerText = line.text;
+
+            // 🎨 estilos por tipo
+            switch (line.type) {
+                case "damage":
+                    p.classList.add("log-damage");
+                    break;
+                case "crit":
+                    p.classList.add("log-crit");
+                    break;
+                case "miss":
+                    p.classList.add("log-miss");
+                    break;
+                case "dodge":
+                    p.classList.add("log-dodge");
+                    break;
+                default:
+                    p.classList.add("log-info");
+            }
+
+        } else {
+            p.innerText = line;
+        }
+
+        log.appendChild(p);
+    });
+
+    // 🔽 auto scroll
+    log.scrollTop = log.scrollHeight;
+}
+
+
+// -------------------------
+// ANIMACIÓN
+// -------------------------
+
+function animateEnemy() {
+    const enemy = document.getElementById("enemy");
+
+    enemy.classList.add("shake");
+
+    setTimeout(() => {
+        enemy.classList.remove("shake");
+    }, 300);
 }
