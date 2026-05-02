@@ -1,29 +1,31 @@
-//ui/web/static/game.js
-
 let combatActive = false;
 
 
 // -------------------------
-// INICIAR COMBATE
+// SIGUIENTE SALA (CORE GAME)
 // -------------------------
-function startGame() {
-    fetch("/start")
+function nextRoom() {
+    fetch("/next_room")
         .then(res => res.json())
         .then(data => {
-            combatActive = true;
 
-            clearLog(); // 🔥 limpiar log anterior
             updateUI(data);
+            clearLog();
+            addLog(data.log || []);
 
-            addLog(data.log || [
-                { type: "info", text: "¡Un enemigo aparece!" }
-            ]);
+            renderMap(data.dungeon);
+
+            if (data.mode === "combat") {
+                combatActive = true;
+            } else {
+                combatActive = false;
+            }
         });
 }
 
 
 // -------------------------
-// ENVIAR ACCIÓN
+// ACCIONES DE COMBATE
 // -------------------------
 function sendAction(action) {
     if (!combatActive) {
@@ -42,13 +44,10 @@ function sendAction(action) {
     .then(data => {
 
         updateUI(data);
-
-        // 🔥 añadir log del backend
         addLog(data.log || []);
+        renderMap(data.dungeon);
 
-        // -------------------------
-        // ANIMACIÓN DE ATAQUE
-        // -------------------------
+        // animación
         if (data.log) {
             data.log.forEach(line => {
                 if (line.type === "damage" || line.type === "crit") {
@@ -57,7 +56,7 @@ function sendAction(action) {
             });
         }
 
-        // FIN DEL COMBATE
+        // FIN COMBATE
         if (data.end) {
             combatActive = false;
 
@@ -68,12 +67,9 @@ function sendAction(action) {
                     let lootText = data.loot.map(i => i.nombre).join(", ");
                     addLog([{ type: "info", text: "Loot: " + lootText }]);
                 }
-
             } else {
                 addLog([{ type: "info", text: "Has perdido o escapado..." }]);
             }
-
-            return;
         }
     });
 }
@@ -84,6 +80,7 @@ function sendAction(action) {
 // -------------------------
 function updateUI(data) {
 
+    // PLAYER
     if (data.player) {
         document.getElementById("player-hp").innerText =
             data.player.hp + " / " + data.player.hp_max;
@@ -98,6 +95,7 @@ function updateUI(data) {
             data.player.oro;
     }
 
+    // ENEMY
     if (data.enemy) {
         document.getElementById("enemy-name").innerText =
             data.enemy.nombre;
@@ -112,9 +110,50 @@ function updateUI(data) {
 
 
 // -------------------------
-// LOG SISTEMA NUEVO
+// MAPA VISUAL 🗺️
 // -------------------------
+function renderMap(dungeon) {
+    const container = document.getElementById("map-container");
 
+    if (!dungeon) return;
+
+    container.innerHTML = "";
+
+    dungeon.salas.forEach((room, index) => {
+        const node = document.createElement("span");
+
+        let icon = "❓";
+
+        if (room.type === "combat") icon = "⚔️";
+        if (room.type === "rest") icon = "🛏️";
+        if (room.type === "boss") icon = "👑";
+
+        node.innerText = icon;
+
+        // estilos
+        node.style.margin = "5px";
+        node.style.fontSize = "24px";
+
+        // visitada
+        if (room.visited) {
+            node.style.opacity = "0.4";
+        }
+
+        // actual
+        if (index === dungeon.index) {
+            node.style.border = "2px solid #38bdf8";
+            node.style.borderRadius = "6px";
+            node.style.padding = "2px";
+        }
+
+        container.appendChild(node);
+    });
+}
+
+
+// -------------------------
+// LOG
+// -------------------------
 function clearLog() {
     document.getElementById("log-text").innerHTML = "";
 }
@@ -127,35 +166,28 @@ function addLog(lines) {
     lines.forEach(line => {
         const p = document.createElement("p");
 
-        if (typeof line === "object") {
-            p.innerText = line.text;
+        p.innerText = line.text;
 
-            // 🎨 estilos por tipo
-            switch (line.type) {
-                case "damage":
-                    p.classList.add("log-damage");
-                    break;
-                case "crit":
-                    p.classList.add("log-crit");
-                    break;
-                case "miss":
-                    p.classList.add("log-miss");
-                    break;
-                case "dodge":
-                    p.classList.add("log-dodge");
-                    break;
-                default:
-                    p.classList.add("log-info");
-            }
-
-        } else {
-            p.innerText = line;
+        switch (line.type) {
+            case "damage":
+                p.classList.add("log-damage");
+                break;
+            case "crit":
+                p.classList.add("log-crit");
+                break;
+            case "miss":
+                p.classList.add("log-miss");
+                break;
+            case "dodge":
+                p.classList.add("log-dodge");
+                break;
+            default:
+                p.classList.add("log-info");
         }
 
         log.appendChild(p);
     });
 
-    // 🔽 auto scroll
     log.scrollTop = log.scrollHeight;
 }
 
@@ -163,7 +195,6 @@ function addLog(lines) {
 // -------------------------
 // ANIMACIÓN
 // -------------------------
-
 function animateEnemy() {
     const enemy = document.getElementById("enemy");
 

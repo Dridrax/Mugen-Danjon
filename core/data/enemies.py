@@ -1,6 +1,7 @@
 ENEMIES = {
     "goblin": {
         "nombre": "Goblin",
+        "tipo": "normal",
         "stats": {
             "hp": 30,
             "ataque": 8,
@@ -15,6 +16,7 @@ ENEMIES = {
 
     "slime": {
         "nombre": "Slime",
+        "tipo": "normal",
         "stats": {
             "hp": 10,
             "ataque": 4,
@@ -29,6 +31,7 @@ ENEMIES = {
 
     "popo": {
         "nombre": "Popo",
+        "tipo": "normal",
         "stats": {
             "hp": 1,
             "ataque": 1,
@@ -39,5 +42,21 @@ ENEMIES = {
             {"item_id": "oro_1", "probabilidad": 0.1}
         ],
         "peso": 35
+    },
+
+    "goblin_king": {
+        "nombre": "Rey Goblin",
+        "tipo": "boss",
+        "stats": {
+            "hp": 80,
+            "ataque": 12,
+            "defensa": 4
+        },
+        "peso": 1,
+        "drop": [
+            {"item_id": "oro_10", "probabilidad": 1},
+            {"item_id": "soul_king_goblin0", "probabilidad": 0.1}
+        ]
+
     }
 }

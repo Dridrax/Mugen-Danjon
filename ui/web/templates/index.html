@@ -1,5 +1,3 @@
-<!--ui/web/templates/index.html-->
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -11,32 +9,50 @@
 
     <h1>Mugen Danjon</h1>
 
-    <div id="top">
-        <div id="player">
-            <h2>Jugador</h2>
-            <p>HP: <span id="player-hp"></span></p>
-            <p>Ataque: <span id="player-attack"></span></p>
-            <p>Defensa: <span id="player-defense"></span></p>
-            <p>Oro: <span id="player-gold"></span></p>
-        </div>
+    <div id="game">
 
+        <!-- ENEMIGO (arriba derecha) -->
         <div id="enemy">
             <h2>Enemigo</h2>
-            <p>Nombre: <span id="enemy-name"></span></p>
-            <p>HP: <span id="enemy-hp"></span></p>
+            <p>Nombre: <span id="enemy-name">-</span></p>
+            <p>HP: <span id="enemy-hp">-</span></p>
         </div>
-    </div>
 
-    <div id="log">
-        <h3>Combate</h3>
-        <div id="log-text">Pulsa iniciar para comenzar</div>
-    </div>
+        <!-- LOG (arriba izquierda) -->
+        <div id="log">
+            <h3>Combate</h3>
+            <div id="log-text"></div>
+        </div>
 
-    <div id="actions">
-        <button onclick="startGame()">Iniciar combate</button>
-        <button onclick="sendAction('attack')">Atacar</button>
-        <button onclick="sendAction('dodge')">Esquivar</button>
-        <button onclick="sendAction('exit')">Salir</button>
+        <!-- MAPA (abajo izquierda) -->
+        <div id="map">
+            <h3>Mazmorra</h3>
+            <div id="map-container"></div>
+        </div>
+
+        <!-- ZONA CENTRAL (vacía de momento) -->
+        <div id="center"></div>
+
+        <!-- DERECHA (player + acciones) -->
+        <div id="side">
+
+            <div id="player">
+                <h2>Jugador</h2>
+                <p>HP: <span id="player-hp">-</span></p>
+                <p>Ataque: <span id="player-attack">-</span></p>
+                <p>Defensa: <span id="player-defense">-</span></p>
+                <p>Oro: <span id="player-gold">-</span></p>
+            </div>
+
+            <div id="actions">
+                <button onclick="nextRoom()">Siguiente sala</button>
+                <button onclick="sendAction('attack')">Atacar</button>
+                <button onclick="sendAction('dodge')">Esquivar</button>
+                <button onclick="sendAction('exit')">Salir</button>
+            </div>
+
+        </div>
+
     </div>
 
     <script src="/static/game.js"></script>

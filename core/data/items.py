@@ -23,6 +23,11 @@ ITEMS = {
         }
     },
 
+    "soul_king_goblin":{
+        "nombre": "Alma de Rey Goblin",
+        "tipo": "recurso"
+    },
+
     "oro_10": {
         "nombre": "Oro",
         "tipo": "moneda",

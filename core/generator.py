@@ -5,14 +5,10 @@ from core.enemy import Enemy
 
 
 # -------------------------
-# UTILIDADES INTERNAS
+# FILTROS
 # -------------------------
 
-def _filtrar_enemigos_por_piso(piso):
-    """
-    Permite en el futuro limitar enemigos por piso.
-    Si no existe restricción, devuelve todos.
-    """
+def _filtrar_por_piso(piso):
     enemigos_validos = {}
 
     for enemy_id, data in ENEMIES.items():
@@ -25,77 +21,54 @@ def _filtrar_enemigos_por_piso(piso):
     return enemigos_validos
 
 
-def _seleccionar_enemigo_por_peso(enemigos_filtrados):
-    """
-    Selecciona un enemigo usando pesos.
-    """
-    ids = list(enemigos_filtrados.keys())
-    pesos = [enemigos_filtrados[e]["peso"] for e in ids]
-
-    seleccionado = random.choices(ids, weights=pesos, k=1)[0]
-    return seleccionado
-
-
-# -------------------------
-# API PÚBLICA
-# -------------------------
-
-def generar_enemigo(piso):
-    """
-    Genera un enemigo basado en el piso actual.
-    """
-    enemigos_filtrados = _filtrar_enemigos_por_piso(piso)
-
-    if not enemigos_filtrados:
-        raise ValueError("No hay enemigos disponibles para este piso")
-
-    enemy_id = _seleccionar_enemigo_por_peso(enemigos_filtrados)
-    data = enemigos_filtrados[enemy_id]
-
-    return Enemy(enemy_id, data, piso)
-
-
-def generar_grupo_enemigos(piso, tamaño_min=1, tamaño_max=3):
-    """
-    Genera un grupo de enemigos para una habitación.
-    """
-    cantidad = random.randint(tamaño_min, tamaño_max)
-
-    return [generar_enemigo(piso) for _ in range(cantidad)]
-
-
-def generar_habitacion(piso):
-    """
-    Genera una habitación completa.
-    Devuelve un diccionario para que UI lo interprete.
-    """
-    enemigos = generar_grupo_enemigos(piso)
-
+def _filtrar_por_tipo(enemigos, tipo):
     return {
-        "tipo": "combate",
-        "enemigos": enemigos
+        eid: data for eid, data in enemigos.items()
+        if data.get("tipo", "normal") == tipo
     }
 
 
-def generar_piso(piso, habitaciones_por_piso=5):
-    """
-    Genera todas las habitaciones de un piso.
-    """
-    return [generar_habitacion(piso) for _ in range(habitaciones_por_piso)]
+def _seleccionar_por_peso(enemigos):
+    ids = list(enemigos.keys())
+    pesos = [enemigos[e]["peso"] for e in ids]
+
+    return random.choices(ids, weights=pesos, k=1)[0]
 
 
 # -------------------------
-# EXTENSIÓN FUTURA (PREPARADO)
+# GENERADOR PRINCIPAL
 # -------------------------
 
-def generar_evento(piso):
+def generar_enemigo(piso, tipo="normal"):
     """
-    Placeholder para eventos futuros:
-    - cofres
-    - tiendas
-    - trampas
+    Genera un enemigo según:
+    - piso
+    - tipo (normal / boss)
     """
-    return {
-        "tipo": "evento",
-        "contenido": None
-    }
+
+    enemigos = _filtrar_por_piso(piso)
+    enemigos = _filtrar_por_tipo(enemigos, tipo)
+
+    if not enemigos:
+        raise ValueError(f"No hay enemigos tipo '{tipo}' para este piso")
+
+    enemy_id = _seleccionar_por_peso(enemigos)
+    data = enemigos[enemy_id]
+
+    enemigo = Enemy(enemy_id, data, piso)
+
+    # -------------------------
+    # ESCALADO SIMPLE
+    # -------------------------
+    enemigo.hp_actual += piso * 5
+    enemigo.ataque += piso * 2
+
+    return enemigo
+
+
+# -------------------------
+# GRUPOS (FUTURO)
+# -------------------------
+
+def generar_grupo_enemigos(piso, cantidad=1, tipo="normal"):
+    return [generar_enemigo(piso, tipo) for _ in range(cantidad)]
