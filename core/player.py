@@ -1,118 +1,200 @@
-#class/player.py
+from core.data.skills import SKILLS
+from core.enemy import Enemigo
 
 class Player:
-    def __init__(self):
-        # -------------------------
-        # STATS BASE
-        # -------------------------
-        self.hp_max = 100
+    def __init__(self, nombre):
+
+        self.nombre = nombre
+
+        self.hp_max = 20
         self.hp = self.hp_max
 
         self.ataque_base = 10
         self.defensa_base = 5
 
-        # -------------------------
-        # PROGRESO
-        # -------------------------
-        self.piso = 1
-        self.habitacion = 0
+        self.nivel = 1
+        self.exp = 0
 
-        # -------------------------
-        # ECONOMÍA
-        # -------------------------
+        self.exp_siguiente_nivel = self.calcular_exp_siguiente()
+
+        self.habilidades = [
+            "ataque_basico",
+            "cura_base"
+        ]
+
+        self.inventario = []
         self.oro = 0
 
-        # -------------------------
-        # INVENTARIO
-        # -------------------------
-        self.inventario = []
-
-        # -------------------------
-        # EQUIPAMIENTO (1 arma)
-        # -------------------------
-        self.arma_equipada = None
-
-    # -------------------------
+    # =========================
     # ESTADO
-    # -------------------------
-
+    # =========================
     def esta_vivo(self):
         return self.hp > 0
 
-    # -------------------------
-    # STATS EFECTIVOS
-    # -------------------------
-
+    # =========================
+    # STATS
+    # =========================
     def get_ataque(self):
-        bonus = 0
-
-        if self.arma_equipada and "stats" in self.arma_equipada.__dict__:
-            bonus += self.arma_equipada.stats.get("ataque", 0)
-
-        return self.ataque_base + bonus
+        return self.ataque_base
 
     def get_defensa(self):
         return self.defensa_base
 
-    # -------------------------
+    # =========================
     # VIDA
-    # -------------------------
+    # =========================
+    def recibir_dano(self, cantidad):
 
-    def recibir_dano(self, dano):
-        self.hp -= dano
+        dano_final = max(0, cantidad - self.defensa_base)
 
-        if self.hp < 0:
-            self.hp = 0
-        return dano
+        self.hp -= dano_final
+        self.hp = max(0, self.hp)
+
+        return dano_final
 
     def curar(self, cantidad):
-        self.hp = min(self.hp_max, self.hp + cantidad)
 
-    # -------------------------
-    # INVENTARIO
-    # -------------------------
+        self.hp = min(
+            self.hp_max,
+            self.hp + cantidad
+        )
 
-    def agregar_item(self, item):
-        self.inventario.append(item)
-
-    def agregar_oro(self, cantidad):
-        self.oro += cantidad
-
-    # -------------------------
-    # EQUIPAMIENTO
-    # -------------------------
-
-    def equipar_arma(self, item):
+    # =========================
+    # EXPERIENCIA / NIVELES
+    # =========================
+    def calcular_exp_siguiente(self):
         """
-        Solo permite equipar armas.
+        Curva de experiencia necesaria
         """
-        if item.tipo != "arma":
-            return False
 
-        self.arma_equipada = item
-        return True
+        return int(40 + (self.nivel ** 2.0) * 15)
 
-    def cambiar_arma(self, item_nueva):
-        """
-        Devuelve el arma anterior si existía.
-        """
-        arma_anterior = self.arma_equipada
-        self.arma_equipada = item_nueva
-        return arma_anterior
+    def ganar_xp(self, cantidad):
 
-    # -------------------------
-    # UTILIDAD (para UI futura)
-    # -------------------------
+        print(f"\n-{self.nombre} gana {cantidad} EXP.")
 
-    def get_estado(self):
+        self.exp += cantidad
+
+        while self.exp >= self.exp_siguiente_nivel:
+
+            self.exp -= self.exp_siguiente_nivel
+
+            self.subir_nivel()
+
+    def subir_nivel(self):
+
+        self.nivel += 1
+
+        # =========================
+        # ESCALADO DE STATS
+        # =========================
+        hp_ganado = 15
+        atk_ganado = 3
+        def_ganada = 2
+
+        self.hp_max += hp_ganado
+        self.ataque_base += atk_ganado
+        self.defensa_base += def_ganada
+
+        # Curación completa al subir nivel
+        self.hp = self.hp_max
+
+        # Nueva experiencia requerida
+        self.exp_siguiente_nivel = self.calcular_exp_siguiente()
+
+        # Nuevas habilidades
+        self.ganar_skill()
+
+        print(f"\n-{self.nombre} SUBE A NIVEL {self.nivel}!")
+        print(f"-HP +{hp_ganado}")
+        print(f"-ATK +{atk_ganado}")
+        print(f"-DEF +{def_ganada}")
+
+    def ganar_skill(self):
+
+        if (
+            self.nivel == 5 and
+            "tajo_rapido" not in self.habilidades
+        ):
+            self.habilidades.append("tajo_rapido")
+
+        if (
+            self.nivel == 10 and
+            "golpe_fuerte" not in self.habilidades
+        ):
+            self.habilidades.append("golpe_fuerte")
+
+    # =========================
+    # ACCIONES (EJECUCIÓN)
+    # =========================
+    def ejecutar_habilidad(self, skill_id, objetivo):
+
+        skill = SKILLS[skill_id]
+
+        if skill["tipo"] == "daño":
+
+            dano = self.get_ataque() * skill["valor"]
+
+            recibido = objetivo.recibir_dano(dano)
+
+            print(
+                f"-> Usas {skill['nombre']} "
+                f"contra {objetivo.nombre} "
+                f"e infliges {recibido} de daño."
+            )
+
+        elif skill["tipo"] == "curacion":
+
+            cantidad = skill["valor"]
+
+            self.curar(cantidad)
+
+            print(
+                f"-> Usas {skill['nombre']} "
+                f"y te curas {cantidad} HP."
+            )
+
+    # =========================
+    # INPUT (DECISIÓN HUMANA)
+    # =========================
+    def elegir_accion(self, enemigos_vivos):
+
+        print("\nTus habilidades:")
+
+        for i, s_id in enumerate(self.habilidades):
+
+            print(f"{i+1}. {SKILLS[s_id]['nombre']}")
+
+        s_idx = int(input("Elige habilidad: ")) - 1
+
+        skill_id = self.habilidades[s_idx]
+
+        skill = SKILLS[skill_id]
+
+        objetivo = None
+
+        if skill["tipo"] == "daño":
+
+            t_idx = int(
+                input(
+                    f"¿A quién atacas? "
+                    f"(1-{len(enemigos_vivos)}): "
+                )
+            ) - 1
+
+            objetivo = enemigos_vivos[t_idx]
+
+        return skill_id, objetivo
+
+    # =========================
+    # CONTEXTO IA
+    # =========================
+    def get_contexto(self):
+
         return {
             "hp": self.hp,
             "hp_max": self.hp_max,
-            "ataque": self.get_ataque(),
-            "defensa": self.get_defensa(),
-            "oro": self.oro,
-            "arma": self.arma_equipada.nombre if self.arma_equipada else None
+            "nombre_player": self.nombre,
+            "nivel": self.nivel,
+            "esta_herido": self.hp < (self.hp_max * 0.3)
         }
-
-    def get_inventario(self):
-        return [item.nombre for item in self.inventario]
