@@ -15,12 +15,20 @@ class Player:
         self.nivel = 1
         self.exp = 0
 
+        self.stat_points = 0
+        self.skill_points = 0
+
         self.exp_siguiente_nivel = self.calcular_exp_siguiente()
 
         self.habilidades = [
             "ataque_basico",
             "cura_base"
         ]
+
+        self.skill_levels = {
+            "ataque_basico": 1,
+            "cura_base": 1
+        }
 
         self.inventario = []
         self.oro = 0
@@ -39,6 +47,37 @@ class Player:
 
     def get_defensa(self):
         return self.defensa_base
+    
+    def subir_stat(self, stat):
+
+        if self.stat_points <= 0:
+            print("\nNo tienes puntos de stats.")
+            return
+        
+        if stat == "hp":
+    
+            self.hp_max += 5
+            self.hp += 5
+
+            print("\nHP máximo aumentado +5")
+
+        elif stat == "ataque":
+
+            self.ataque_base += 2
+
+            print("\nAtaque aumentado +2")
+
+        elif stat == "defensa":
+
+            self.defensa_base += 1
+
+            print("\nDefensa aumentada +1")
+
+        else:
+            print("\nStat inválido.")
+            return
+        
+        self.stat_points -= 1
 
     # =========================
     # VIDA
@@ -88,13 +127,13 @@ class Player:
         # =========================
         # ESCALADO DE STATS
         # =========================
-        hp_ganado = 15
-        atk_ganado = 3
-        def_ganada = 2
+        puntos_ganados = 5
+        self.stat_points += puntos_ganados
 
-        self.hp_max += hp_ganado
-        self.ataque_base += atk_ganado
-        self.defensa_base += def_ganada
+        if self.nivel % 2 == 0:
+            self.skill_points += 1
+
+            print("-Obtuviste 1 Skill Point.")
 
         # Curación completa al subir nivel
         self.hp = self.hp_max
@@ -102,28 +141,83 @@ class Player:
         # Nueva experiencia requerida
         self.exp_siguiente_nivel = self.calcular_exp_siguiente()
 
-        # Nuevas habilidades
-        self.ganar_skill()
 
         print(f"\n-{self.nombre} SUBE A NIVEL {self.nivel}!")
-        print(f"-HP +{hp_ganado}")
-        print(f"-ATK +{atk_ganado}")
-        print(f"-DEF +{def_ganada}")
+        print(f"-Obtienes {puntos_ganados} puntos de stat.")
 
-    def ganar_skill(self):
+    def distribuir_stats(self):
 
-        if (
-            self.nivel == 5 and
-            "tajo_rapido" not in self.habilidades
-        ):
-            self.habilidades.append("tajo_rapido")
+        while self.stat_points > 0:
 
-        if (
-            self.nivel == 10 and
-            "golpe_fuerte" not in self.habilidades
-        ):
-            self.habilidades.append("golpe_fuerte")
+            print(f"\nPuntos disponibles: {self.stat_points}")
 
+            self.mostrar_stats()
+
+            print("\nMejorar:")
+            print("1. HP (+5)")
+            print("2. ATK (+2)")
+            print("3. DEF (+1)")
+            print("4. Salir.")
+
+            opcion = input("Elige stat: ")
+
+            if opcion == "1":
+                self.subir_stat("hp")
+
+            elif opcion == "2":
+                self.subir_stat("ataque")
+
+            elif opcion == "3":
+                self.subir_stat("defensa")
+
+            elif opcion == "4":
+                break
+
+    def aprender_skill(self, skill_id):
+
+        if skill_id in self.habilidades:
+            print("\nYa conoces esta habilidad.")
+            return
+        self.habilidades.append(skill_id)
+
+        self.skill_levels[skill_id] = 1
+
+        print(
+            f"\Aprendes "
+            f"{SKILLS[skill_id]['nombre']}")
+        
+    def get_skill_power(self, skill_id):
+        nivel = self.skill_levels[skill_id]
+        
+        return SKILLS[skill_id]["scaling"][nivel]
+    
+
+    def mejorar_skill(self, skill_id):
+
+        if self.skill_points <= 0:
+
+            print("\nNo tienes Skill Points.")
+            return
+
+        nivel_actual = self.skill_levels[skill_id]
+
+        max_level = SKILLS[skill_id]["max_level"]
+
+        if nivel_actual >= max_level:
+
+            print("\nLa habilidad ya está al máximo.")
+            return
+
+        self.skill_levels[skill_id] += 1
+
+        self.skill_points -= 1
+
+        print(
+            f"\n{SKILLS[skill_id]['nombre']} "
+            f"sube a nivel "
+            f"{self.skill_levels[skill_id]}"
+        )
+        
     # =========================
     # ACCIONES (EJECUCIÓN)
     # =========================
@@ -133,7 +227,9 @@ class Player:
 
         if skill["tipo"] == "daño":
 
-            dano = self.get_ataque() * skill["valor"]
+            power = self.get_skill_power(skill_id)
+
+            dano = self.get_ataque() * power
 
             recibido = objetivo.recibir_dano(dano)
 
@@ -145,7 +241,7 @@ class Player:
 
         elif skill["tipo"] == "curacion":
 
-            cantidad = skill["valor"]
+            cantidad = self.get_skill_power(skill_id)
 
             self.curar(cantidad)
 
@@ -185,6 +281,15 @@ class Player:
             objetivo = enemigos_vivos[t_idx]
 
         return skill_id, objetivo
+    
+    def mostrar_stats(self):
+
+        print(f"\n{self.nombre}")
+        print(f"HP: {self.hp}/{self.hp_max}")
+        print(f"ATK: {self.ataque_base}")
+        print(f"DEF: {self.defensa_base}")
+        print(f"Stat Points: {self.stat_points}")
+        print(f"Skill Point: {self.skill_points}")
 
     # =========================
     # CONTEXTO IA

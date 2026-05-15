@@ -1,5 +1,7 @@
 from core.dungeon.rooms.room import Room
 from core.dungeon.rooms.room_types import RoomType
+from core.player import Player
+
 
 class RestRoom(Room):
 
@@ -22,10 +24,20 @@ class RestRoom(Room):
             player.hp_max,
             player.hp + heal
         )
+        while True:
+            print("\nSala de descanso.")
+            print(f"Recuperas {heal} HP.")
 
-        print("\nSala de descanso.")
-        print(f"Recuperas {heal} HP.")
+            print("\n1. Distribuir Stats.")
 
+            print("\n2. Seguir Descendiendo.")
+
+            respuesta = int(input("\n¿Que hacer?: "))
+            if respuesta == 1:
+
+                player.distribuir_stats()
+            elif respuesta == 2:
+                break
 
         """
         En un futuro aqui se añadiran las opciones para si craftear algo

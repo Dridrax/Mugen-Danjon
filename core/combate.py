@@ -98,6 +98,11 @@ class Combate:
             f"{self.jugador.defensa_base}"
         )
 
+        print(
+            f"STAT POINTS: "
+            f"{self.jugador.stat_points}"
+        )
+
         print("\nEnemigos:")
 
         for i, enemigo in enumerate(self.enemigos_vivos()):
